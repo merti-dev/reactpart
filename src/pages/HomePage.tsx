@@ -1,173 +1,127 @@
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import React from 'react'
+import { useEffect, useState, useRef, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+type Product = {
+  id: number;
+  title: string;
+  price: number;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+    image: string;
+    creationAt: string;
+    updatedAt: string;
+  };
+  images: string[];
+};
 
 export default function HomePage() {
-    const products: Array<string>=[
-        "All",
-        "Clothes",
-        "Electronics",
-        "Furniture",
-        "Toys",
-        "Books",
-        "Sports",
-    ]
+  const [data, setData] = useState<Product[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
-    const dummyD = [
-        {
-          id: 1,
-          title: "Product 1",
-          price: 17,
-          category: "Furniture",
-          image: "https://placehold.co/600x400?text=Product+1"
-        },
-        {
-          id: 2,
-          title: "Product 2",
-          price: 23,
-          category: "Miscellaneous",
-          image: "https://placehold.co/600x400?text=Product+2"
-        },
-        {
-          id: 3,
-          title: "Product 3",
-          price: 39,
-          category: "Clothes",
-          image: "https://placehold.co/600x400?text=Product+3"
-        },
-        {
-          id: 4,
-          title: "Product 4",
-          price: 16,
-          category: "Clothes",
-          image: "https://placehold.co/600x400?text=Product+4"
-        },
-        {
-          id: 5,
-          title: "Product 5",
-          price: 15,
-          category: "Clothes",
-          image: "https://placehold.co/600x400?text=Product+5"
-        },
-        {
-          id: 6,
-          title: "Product 6",
-          price: 78,
-          category: "Shoes",
-          image: "https://placehold.co/600x400?text=Product+6"
-        },
-        {
-          id: 7,
-          title: "Product 7",
-          price: 59,
-          category: "Miscellaneous",
-          image: "https://placehold.co/600x400?text=Product+7"
-        },
-        {
-          id: 8,
-          title: "Product 8",
-          price: 20,
-          category: "Furniture",
-          image: "https://placehold.co/600x400?text=Product+8"
-        },
-        {
-          id: 9,
-          title: "Product 9",
-          price: 87,
-          category: "Electronics",
-          image: "https://placehold.co/600x400?text=Product+9"
-        },
-        {
-          id: 10,
-          title: "Product 10",
-          price: 66,
-          category: "Shoes",
-          image: "https://placehold.co/600x400?text=Product+10"
-        },
-        {
-          id: 11,
-          title: "Product 11",
-          price: 32,
-          category: "Electronics",
-          image: "https://placehold.co/600x400?text=Product+11"
-        },
-        {
-          id: 12,
-          title: "Product 12",
-          price: 58,
-          category: "Furniture",
-          image: "https://placehold.co/600x400?text=Product+12"
-        },
-        {
-          id: 13,
-          title: "Product 13",
-          price: 42,
-          category: "Electronics",
-          image: "https://placehold.co/600x400?text=Product+13"
-        },
-        {
-          id: 14,
-          title: "Product 14",
-          price: 55,
-          category: "Clothes",
-          image: "https://placehold.co/600x400?text=Product+14"
-        },
-        {
-          id: 15,
-          title: "Product 15",
-          price: 44,
-          category: "Shoes",
-          image: "https://placehold.co/600x400?text=Product+15"
-        },
-        {
-          id: 16,
-          title: "Product 16",
-          price: 88,
-          category: "Electronics",
-          image: "https://placehold.co/600x400?text=Product+16"
-        },]
-      
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(
+      `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=12`
+    );
+    const newData = await res.json();
+    setData((prev) => [...prev, ...newData]);
+    setLoading(false);
+  }, [offset]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          setOffset((prev) => prev + 12);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) observer.unobserve(observerRef.current);
+    };
+  }, [loading]);
+
+  const products: string[] = [
+    "All",
+    "Clothes",
+    "Electronics",
+    "Furniture",
+    "Toys",
+    "Books",
+    "Sports",
+  ];
 
   return (
-  <div>
-   {products.map((product, index) => (
-      <Badge
-        variant="outline"
-        key={index}
-        className="border-orange-800 text-gray-900 text-lg mx-2 my-1 hover:cursor-pointer bg-orange-50 hover:scale-110 ease-in duration-200"
-      >
-        {product}
-      </Badge>
-    ))}
+    <div>
+      <div className="flex flex-wrap justify-center">
+        {products.map((product, index) => (
+          <Badge
+            variant="outline"
+            key={index}
+            className="border-orange-800 text-gray-900 text-lg mx-2 my-1 hover:cursor-pointer bg-orange-50 hover:scale-110 ease-in duration-200"
+          >
+            {product}
+          </Badge>
+        ))}
+      </div>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 pt-40 pb-12">
-  {dummyD.map((product, index) => (
-    <Card key={index} className="w-full max-w-xs mx-auto shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-      <CardHeader className="bg-orange-50 py-4">
-        <CardTitle className="text-xl text-orange-800 font-semibold">{product.title}</CardTitle>
-      </CardHeader>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 pt-20 pb-12">
+        {data.map((product) => (
+          <Card
+            key={product.id}
+            className="w-full max-w-xs mx-auto flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200"
+          >
+            <CardHeader className="bg-orange-50 py-4">
+              <CardTitle className="text-xl text-orange-800 font-semibold">
+                {product.title}
+              </CardTitle>
+            </CardHeader>
 
-      <CardContent className="flex justify-center items-center h-48 bg-white overflow-hidden">
-        {product.image && (
-          <img
-            src={product.image}
-            alt={product.title}
-            className="object-contain max-h-full"
-          />
-        )}
-      </CardContent>
+            <CardContent className="flex justify-center items-center h-48 bg-white overflow-hidden flex-grow">
+              {product.images[0] && (
+                <img
+                  src={product.images[0]}
+                  alt={product.title}
+                  className="object-contain max-h-full"
+                />
+              )}
+            </CardContent>
 
-      <CardFooter className="flex justify-between items-center px-4 py-2 text-sm text-gray-600">
-        <span>Category: <strong>{product.category}</strong></span>
-        <span className="text-green-600 font-bold">${product.price}</span>
-      </CardFooter>
-    </Card>
-  ))}
-</div>
+            <CardFooter className="flex justify-between items-center px-4 py-2 text-sm text-gray-600">
+              <span>
+                Category: <strong>{product.category.name}</strong>
+              </span>
+              <span className="text-green-600 font-bold">${product.price}</span>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
 
-
-
-
-</div>
+      {loading && (
+        <div className="text-center text-gray-600 py-4">Loading more...</div>
+      )}
+      <div ref={observerRef} className="h-8" />
+    </div>
   );
 }

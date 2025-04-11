@@ -28,6 +28,7 @@ export default function HomePage() {
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,7 +37,9 @@ export default function HomePage() {
         `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=12`
       );
       const newData = await res.json();
+  
       setData((prev) => [...prev, ...newData]);
+      setHasMore(newData.length === 12);
       setLoading(false);
     };
   
@@ -47,21 +50,24 @@ export default function HomePage() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && hasMore) {
           setOffset((prev) => prev + 12);
         }
       },
-      { threshold: 1.0 }
+      { threshold: 0.1 }
     );
-
+  
     if (observerRef.current) {
       observer.observe(observerRef.current);
     }
-
+  
     return () => {
-      if (observerRef.current) observer.unobserve(observerRef.current);
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current);
+      }
     };
-  }, [loading]);
+  }, [loading, hasMore]);
+  
 
   const products: string[] = [
     "All",
@@ -75,12 +81,12 @@ export default function HomePage() {
 
   return (
     <div>
-      <div className="flex flex-wrap justify-center">
+      <div className="flex flex-wrap justify-center px-4 py-6 bg-gray-50">
         {products.map((product, index) => (
           <Badge
             variant="outline"
             key={index}
-            className="border-orange-800 text-gray-900 text-lg mx-2 my-1 hover:cursor-pointer bg-orange-50 hover:scale-110 ease-in duration-200"
+            className="rounded-full border border-gray-300 bg-white text-gray-800 text-base font-medium mx-2 my-2 px-5 py-2 shadow-sm hover:shadow-md transition-transform transform hover:scale-105 hover:bg-white cursor-pointer"
           >
             {product}
           </Badge>
@@ -119,10 +125,11 @@ export default function HomePage() {
         ))}
       </div>
 
-      {loading && (
-        <div className="text-center text-gray-600 py-4">Loading more...</div>
-      )}
-      <div ref={observerRef} className="h-8" />
+      <div ref={observerRef} className="text-center text-gray-500 mt-8">
+  {loading
+    ? 'Loading more...'
+    : !hasMore && 'No more products to load'}
+</div>
     </div>
   );
 }

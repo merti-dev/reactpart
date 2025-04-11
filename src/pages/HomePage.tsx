@@ -29,19 +29,20 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch(
-      `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=12`
-    );
-    const newData = await res.json();
-    setData((prev) => [...prev, ...newData]);
-    setLoading(false);
-  }, [offset]);
-
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const res = await fetch(
+        `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=12`
+      );
+      const newData = await res.json();
+      setData((prev) => [...prev, ...newData]);
+      setLoading(false);
+    };
+  
     fetchData();
-  }, [fetchData]);
+  }, [offset]);
+  
 
   useEffect(() => {
     const observer = new IntersectionObserver(

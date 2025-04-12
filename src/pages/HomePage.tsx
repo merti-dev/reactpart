@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -13,14 +13,9 @@ type Product = {
   title: string;
   price: number;
   category: {
-    id: number;
     name: string;
-    slug: string;
-    image: string;
-    creationAt: string;
-    updatedAt: string;
   };
-  image: string;
+  images: string[];
 };
 
 export default function HomePage() {
@@ -29,23 +24,26 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const fetchedIds = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       const res = await fetch(
-        `https://fakestoreapi.com/products?offset=${offset}&limit=12`
+        `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=12`
       );
-      const newData = await res.json();
-  
-      setData((prev) => [...prev, ...newData]);
+      const newData: Product[] = await res.json();
+
+      const uniqueData = newData.filter((item) => !fetchedIds.current.has(item.id));
+      uniqueData.forEach((item) => fetchedIds.current.add(item.id));
+
+      setData((prev) => [...prev, ...uniqueData]);
       setHasMore(newData.length === 12);
       setLoading(false);
     };
-  
+
     fetchData();
   }, [offset]);
-  
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -54,22 +52,21 @@ export default function HomePage() {
           setOffset((prev) => prev + 12);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 1 }
     );
-  
+
     if (observerRef.current) {
       observer.observe(observerRef.current);
     }
-  
+
     return () => {
       if (observerRef.current) {
         observer.unobserve(observerRef.current);
       }
     };
   }, [loading, hasMore]);
-  
 
-  const products: string[] = [
+  const categories = [
     "All",
     "Clothes",
     "Electronics",
@@ -82,13 +79,13 @@ export default function HomePage() {
   return (
     <div>
       <div className="flex flex-wrap justify-center px-4 py-6 bg-gray-50">
-        {products.map((product, index) => (
+        {categories.map((category, index) => (
           <Badge
             variant="outline"
             key={index}
-            className="rounded-full border border-gray-300 bg-white text-gray-800 text-base font-medium mx-2 my-2 px-5 py-2 shadow-sm hover:shadow-md transition-transform transform hover:scale-105 hover:bg-white cursor-pointer"
+            className="rounded-full border border-gray-300 bg-white text-gray-800 text-base font-medium mx-2 my-2 px-5 py-2 shadow-sm hover:shadow-md transition-transform transform hover:scale-105 cursor-pointer"
           >
-            {product}
+            {category}
           </Badge>
         ))}
       </div>
@@ -106,9 +103,9 @@ export default function HomePage() {
             </CardHeader>
 
             <CardContent className="flex justify-center items-center h-48 bg-white overflow-hidden flex-grow">
-              {product.image && (
+              {product.images?.[0] && (
                 <img
-                  src={product.image}
+                  src={product.images[0]}
                   alt={product.title}
                   className="object-contain max-h-full"
                 />
@@ -125,11 +122,14 @@ export default function HomePage() {
         ))}
       </div>
 
-      <div ref={observerRef} className="text-center text-gray-500 mt-8">
-  {loading
-    ? 'Loading more...'
-    : !hasMore && 'No more products to load'}
-</div>
+      <div
+        ref={observerRef}
+        className="text-center text-gray-500 mt-8 text-sm italic"
+      >
+        {loading
+          ? "Loading..."
+          : !hasMore && "All products are loaded."}
+      </div>
     </div>
   );
 }

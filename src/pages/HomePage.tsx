@@ -20,10 +20,13 @@ type Product = {
 
 export default function HomePage() {
   const [data, setData] = useState<Product[]>([]);
+  const [allData, setAllData] = useState<Product[]>([]);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const fetchedIds = useRef<Set<number>>(new Set());
 
   useEffect(() => {
@@ -37,8 +40,16 @@ export default function HomePage() {
       const uniqueData = newData.filter((item) => !fetchedIds.current.has(item.id));
       uniqueData.forEach((item) => fetchedIds.current.add(item.id));
 
-      setData((prev) => [...prev, ...uniqueData]);
-      setHasMore(newData.length === 12);
+      setAllData((prev) => [...prev, ...uniqueData]);
+
+      const newCategories = Array.from(
+        new Set([...uniqueData.map((p) => p.category.name)])
+      );
+      setCategories((prev) =>
+        Array.from(new Set([...prev, ...newCategories]))
+      );
+
+      setHasMore(uniqueData.length === 12);
       setLoading(false);
     };
 
@@ -66,24 +77,25 @@ export default function HomePage() {
     };
   }, [loading, hasMore]);
 
-  const categories = [
-    "All",
-    "Clothes",
-    "Electronics",
-    "Furniture",
-    "Toys",
-    "Books",
-    "Sports",
-  ];
+  useEffect(() => {
+    if (selectedCategory === "All") {
+      setData(allData);
+    } else {
+      setData(allData.filter((item) => item.category.name === selectedCategory));
+    }
+  }, [selectedCategory, allData]);
 
   return (
     <div>
       <div className="flex flex-wrap justify-center px-4 py-6 bg-gray-50">
-        {categories.map((category, index) => (
+        {["All", ...categories].map((category, index) => (
           <Badge
-            variant="outline"
             key={index}
-            className="rounded-full border border-gray-300 bg-white text-gray-800 text-base font-medium mx-2 my-2 px-5 py-2 shadow-sm hover:shadow-md transition-transform transform hover:scale-105 cursor-pointer"
+            onClick={() => setSelectedCategory(category)}
+            variant="outline"
+            className={`rounded-full border border-gray-300 bg-white text-gray-800 text-base font-medium mx-2 my-2 px-5 py-2 shadow-sm hover:shadow-md transition-transform transform hover:scale-105 cursor-pointer ${
+              selectedCategory === category ? "bg-gray-200" : ""
+            }`}
           >
             {category}
           </Badge>
@@ -126,9 +138,7 @@ export default function HomePage() {
         ref={observerRef}
         className="text-center text-gray-500 mt-8 text-sm italic"
       >
-        {loading
-          ? "Loading..."
-          : !hasMore && "All products are loaded."}
+        {loading ? "Loading..." : !hasMore && "All products are loaded."}
       </div>
     </div>
   );

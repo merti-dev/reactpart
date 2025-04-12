@@ -20,7 +20,7 @@ type Product = {
     creationAt: string;
     updatedAt: string;
   };
-  images: string[];
+  image: string;
 };
 
 export default function HomePage() {
@@ -34,7 +34,7 @@ export default function HomePage() {
     const fetchData = async () => {
       setLoading(true);
       const res = await fetch(
-        `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=12`
+        `https://fakestoreapi.com/products?offset=${offset}&limit=12`
       );
       const newData = await res.json();
   
@@ -106,9 +106,9 @@ export default function HomePage() {
             </CardHeader>
 
             <CardContent className="flex justify-center items-center h-48 bg-white overflow-hidden flex-grow">
-              {product.images[0] && (
+              {product.image && (
                 <img
-                  src={product.images[0]}
+                  src={product.image}
                   alt={product.title}
                   className="object-contain max-h-full"
                 />
